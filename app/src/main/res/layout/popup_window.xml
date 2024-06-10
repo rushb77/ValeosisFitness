@@ -72,7 +72,7 @@
                 android:id="@+id/infraccionesPopUpFolio"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignStart="@+id/infraccionesPopUpSituacion"
+
                 android:layout_alignParentBottom="true"
                 android:orientation="horizontal"
                 android:weightSum="2">
