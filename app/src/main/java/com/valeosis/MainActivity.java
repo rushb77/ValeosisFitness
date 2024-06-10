@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.RectF;
 import android.location.LocationManager;
 import android.media.Image;
@@ -37,6 +36,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -69,7 +69,6 @@ import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
-import com.valeosis.R;
 import com.valeosis.activities.SettingContainerActivity;
 import com.valeosis.database.SQLiteDatabaseHandler;
 import com.valeosis.database.SharedPreference;
@@ -945,13 +944,15 @@ public class MainActivity extends AppCompatActivity {
                     start = false;
                 }
 
-               /* if (jsonObject.getString("Active").equalsIgnoreCase("No") || jsonObject.getString("Membershipstatus").equalsIgnoreCase("Expired")) {
+                if (jsonObject.getString("Active").equalsIgnoreCase("No") || jsonObject.getString("Membershipstatus").equalsIgnoreCase("Expired")) {
 
                     start = false;
                     Toast.makeText(this, "your account is not active try to connect with branch !!!", Toast.LENGTH_LONG).show();
                     showErrorWindow(view, jsonObject);
 
                     return false;
+                }
+                    /*
 
                 } else if (false) {
 
@@ -968,6 +969,12 @@ public class MainActivity extends AppCompatActivity {
         }
         return true;
     }
+
+    public void showErrorWindow(View view, JSONObject jsonObject){
+
+
+    }
+
 
     private void getPermissionsForBluetooth() {
         int permission1 = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
