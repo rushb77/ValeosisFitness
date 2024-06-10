@@ -1,4 +1,4 @@
-# Welcome to GitHub Desktop!
+
 
 Valeosis Fitness Gym Attendance application built in Android Studio 
 
