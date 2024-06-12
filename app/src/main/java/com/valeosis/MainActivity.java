@@ -13,6 +13,7 @@ import android.graphics.Bitmap;
 import android.graphics.RectF;
 import android.location.LocationManager;
 import android.media.Image;
+import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -712,7 +713,7 @@ public class MainActivity extends AppCompatActivity {
 
         faceDataList = db.getFaceByName(userName);
 
-        //loop to iterate over all the available members with the @userName to get their member ID and further loop to iterate over their faceimages
+        //loop to iterate over all the available members with the String userName to get their member ID and further loop to iterate over their faceimages
         //As FaceImgData class stores image data with their member ID
 
         for (FaceData faceData : faceDataList) {
@@ -971,6 +972,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showErrorWindow(View view, JSONObject jsonObject){
+
+        final MediaPlayer mp, mp2;
+        mp = MediaPlayer.create(this, R.raw.error);
+        mp2 = MediaPlayer.create(this, R.raw.membershipexpiredfvoice); //error msg
+        mp.start();
+        mp2.start();
+
+        TextView nameTxt, accTxt, membershipTxt;
+        LayoutInflater inflater = (LayoutInflater) view.getContext().getSystemService(view.getContext().LAYOUT_INFLATER_SERVICE);
+        View popupView = inflater.inflate(R.layout.error_layout, null);
+
+
 
 
     }
