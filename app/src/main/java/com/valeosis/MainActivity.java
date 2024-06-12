@@ -2,6 +2,7 @@ package com.valeosis;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -948,7 +949,7 @@ public class MainActivity extends AppCompatActivity {
                 if (jsonObject.getString("Active").equalsIgnoreCase("No") || jsonObject.getString("Membershipstatus").equalsIgnoreCase("Expired")) {
 
                     start = false;
-                    Toast.makeText(this, "your account is not active try to connect with branch !!!", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(this, "your account is not active try to connect with branch !!!", Toast.LENGTH_LONG).show();
                     showErrorWindow(view, jsonObject);
 
                     return false;
@@ -971,17 +972,31 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    public void showErrorWindow(View view, JSONObject jsonObject){
+    public void showErrorWindow(View view, JSONObject jsonObject) throws InterruptedException {
 
         final MediaPlayer mp, mp2;
         mp = MediaPlayer.create(this, R.raw.error);
         mp2 = MediaPlayer.create(this, R.raw.membershipexpiredfvoice); //error msg
         mp.start();
+        Thread.sleep(1000);
         mp2.start();
 
-        TextView nameTxt, accTxt, membershipTxt;
-        LayoutInflater inflater = (LayoutInflater) view.getContext().getSystemService(view.getContext().LAYOUT_INFLATER_SERVICE);
-        View popupView = inflater.inflate(R.layout.error_layout, null);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        final View customLayout = getLayoutInflater().inflate(R.layout.error_layout, null);
+        builder.setView(customLayout);
+
+        Button okButton = (Button) customLayout.findViewById(R.id.OkBtn);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        okButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.dismiss();
+
+         }});
 
 
 
