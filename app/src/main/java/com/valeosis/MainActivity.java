@@ -11,6 +11,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.RectF;
 import android.location.LocationManager;
 import android.media.Image;
@@ -38,7 +41,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -82,6 +84,7 @@ import com.valeosis.pojo.FaceImgData;
 import com.valeosis.service.BluetoothService;
 import com.valeosis.service.WebService;
 import com.valeosis.utility.Utility;
+import com.valeosis.helper.FaceOverlayView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -102,6 +105,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
 
 public class MainActivity extends AppCompatActivity {
     TextView reco_name, preview_info, textAbove_preview, bluetoothTxt;
@@ -126,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
     String modelFile = "mobile_face_net.tflite";
     int cam_face = CameraSelector.LENS_FACING_FRONT;
     PreviewView previewView;
+    private FaceOverlayView faceOverlay;
     ImageView face_preview;
     String username = "";
     String deviceName;
@@ -173,6 +178,8 @@ public class MainActivity extends AppCompatActivity {
             setting = findViewById(R.id.setting);
 
             previewView = findViewById(R.id.previewView);
+
+            faceOverlay = findViewById(R.id.faceOverlay);
 
             reco_name = findViewById(R.id.textView);
 
@@ -225,6 +232,7 @@ public class MainActivity extends AppCompatActivity {
                             if (cameraProvider != null) {
                                 cameraProvider.unbindAll();
                                 previewView.setVisibility(View.GONE);
+                                faceOverlay.setVisibility(View.GONE);
                                 findViewById(R.id.relativeLayout).setVisibility(View.VISIBLE);
                             }
                         }
@@ -359,6 +367,13 @@ public class MainActivity extends AppCompatActivity {
                                 @Override
                                 public void onSuccess(List<Face> faces) {
 
+                                    List<RectF> faceRects = new ArrayList<>();
+                                    for (Face face : faces) {
+                                        faceRects.add(new RectF(face.getBoundingBox()));
+                                    }
+                                    faceOverlay.updateFaceRects(faceRects);
+
+
                                     if (faces.size() != 0) {
 
                                         Face face = faces.get(0); //Get first face from detected faces
@@ -384,6 +399,8 @@ public class MainActivity extends AppCompatActivity {
                                                 throw new RuntimeException(e);
                                             }
                                         }
+
+
 
                                     }
                                 }
@@ -729,13 +746,11 @@ public class MainActivity extends AppCompatActivity {
                     final float[] knownEmb = (Utility.convertStringTo2DArray(new Gson().toJson(extraObject)))[0];
 
                     float distance = 0;
-
                     //calculating the distance between the known embedding and live embeddings
                     for (int i = 0; i < emb.length; i++) {
                         float diff = emb[i] - knownEmb[i];
                         distance += diff * diff;
                     }
-
                     distance = (float) Math.sqrt(distance);
 
                     //Utility.currentLoginUser = faceData;
@@ -771,6 +786,7 @@ public class MainActivity extends AppCompatActivity {
             start = true;
             previewView.setVisibility(View.VISIBLE);
             findViewById(R.id.relativeLayout).setVisibility(View.GONE);
+            faceOverlay.setVisibility(View.VISIBLE);
             face_preview.setVisibility(View.VISIBLE);
             cameraProvider.unbindAll();
             cameraBind();
@@ -983,6 +999,7 @@ public class MainActivity extends AppCompatActivity {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
+
         final View customLayout = getLayoutInflater().inflate(R.layout.error_layout, null);
         builder.setView(customLayout);
 
@@ -991,13 +1008,13 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog dialog = builder.create();
         dialog.show();
 
+
         okButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 dialog.dismiss();
 
          }});
-
 
 
 
