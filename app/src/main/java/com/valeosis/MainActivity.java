@@ -11,9 +11,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.RectF;
 import android.location.LocationManager;
 import android.media.Image;
@@ -37,13 +34,16 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
@@ -77,6 +77,7 @@ import com.valeosis.activities.SettingContainerActivity;
 import com.valeosis.database.SQLiteDatabaseHandler;
 import com.valeosis.database.SharedPreference;
 import com.valeosis.helper.Connection;
+
 import com.valeosis.helper.MyKeyboard;
 import com.valeosis.pojo.BranchData;
 import com.valeosis.pojo.FaceData;
@@ -84,7 +85,6 @@ import com.valeosis.pojo.FaceImgData;
 import com.valeosis.service.BluetoothService;
 import com.valeosis.service.WebService;
 import com.valeosis.utility.Utility;
-import com.valeosis.helper.FaceOverlayView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -130,8 +130,10 @@ public class MainActivity extends AppCompatActivity {
     String modelFile = "mobile_face_net.tflite";
     int cam_face = CameraSelector.LENS_FACING_FRONT;
     PreviewView previewView;
-    private FaceOverlayView faceOverlay;
+	
+
     ImageView face_preview;
+    FrameLayout frameLayout;
     String username = "";
     String deviceName;
     public static List<FaceData> faceDataList = new ArrayList<>();
@@ -147,6 +149,7 @@ public class MainActivity extends AppCompatActivity {
     private static String[] PERMISSIONS_STORAGE = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_LOCATION_EXTRA_COMMANDS, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_PRIVILEGED,};
     private static String[] PERMISSIONS_LOCATION = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_LOCATION_EXTRA_COMMANDS, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_PRIVILEGED};
 
+    @SuppressLint("MissingInflatedId")
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -179,8 +182,8 @@ public class MainActivity extends AppCompatActivity {
 
             previewView = findViewById(R.id.previewView);
 
-            faceOverlay = findViewById(R.id.faceOverlay);
-
+           frameLayout = findViewById(R.id.previewViewFrameLayout);
+		   
             reco_name = findViewById(R.id.textView);
 
             preview_info = findViewById(R.id.textView2);
@@ -232,7 +235,9 @@ public class MainActivity extends AppCompatActivity {
                             if (cameraProvider != null) {
                                 cameraProvider.unbindAll();
                                 previewView.setVisibility(View.GONE);
-                                faceOverlay.setVisibility(View.GONE);
+                                frameLayout.setVisibility(View.GONE);
+								
+							
                                 findViewById(R.id.relativeLayout).setVisibility(View.VISIBLE);
                             }
                         }
@@ -366,13 +371,8 @@ public class MainActivity extends AppCompatActivity {
                     Task<List<Face>> result = detector.process(image).addOnSuccessListener(new OnSuccessListener<List<Face>>() {
                                 @Override
                                 public void onSuccess(List<Face> faces) {
-
-                                    List<RectF> faceRects = new ArrayList<>();
-                                    for (Face face : faces) {
-                                        faceRects.add(new RectF(face.getBoundingBox()));
-                                    }
-                                    faceOverlay.updateFaceRects(faceRects);
-
+									
+								
 
                                     if (faces.size() != 0) {
 
@@ -431,95 +431,6 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
-
-//trying to implement face detection box
-//    void bindPreview(@NonNull ProcessCameraProvider cameraProvider) {
-//        try {
-//            Preview preview = new Preview.Builder()
-//                    .build();
-//
-//            cameraSelector = new CameraSelector.Builder().requireLensFacing(cam_face).build();
-//
-//            preview.setSurfaceProvider(previewView.getSurfaceProvider());
-//
-//            ImageAnalysis imageAnalysis = new ImageAnalysis.Builder().setTargetResolution(new Size(640, 480)).setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-//                    .build();
-//
-//            Executor executor = Executors.newSingleThreadExecutor();
-//
-//            imageAnalysis.setAnalyzer(executor, new ImageAnalysis.Analyzer() {
-//                @Override
-//                public void analyze(@NonNull ImageProxy imageProxy) {
-//                    try {
-//                        Thread.sleep(0);  // Camera preview refreshed every 10 millisec(adjust as required)
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//
-//                    InputImage image = null;
-//
-//                    @SuppressLint("UnsafeExperimentalUsageError") Image mediaImage = imageProxy.getImage();
-//
-//                    if (mediaImage!= null) {
-//                        image = InputImage.fromMediaImage(mediaImage, imageProxy.getImageInfo().getRotationDegrees());
-//                    }
-//
-//                    Task<List<Face>> result = detector.process(image).addOnSuccessListener(new OnSuccessListener<List<Face>>() {
-//                                @Override
-//                                public void onSuccess(List<Face> faces) {
-//                                    if (faces.size()!= 0) {
-//                                        Face face = faces.get(0); // Get first face from detected faces
-//
-//                                        Bitmap frame_bmp = Utility.toBitmap(mediaImage);
-//
-//                                        int rot = imageProxy.getImageInfo().getRotationDegrees();
-//
-//                                        Bitmap frame_bmp1 = Utility.rotateBitmap(frame_bmp, rot, false, false);
-//
-//
-//                                        RectF boundingBox = new RectF(face.getBoundingBox());
-//
-//                                        faceDetectionView.setBoundingBox(boundingBox);
-//
-//                                        Bitmap cropped_face = Utility.getCropBitmapByCPU(frame_bmp1, boundingBox);
-//
-//                                        if (flipX)
-//                                            cropped_face = Utility.rotateBitmap(cropped_face, 0, flipX, false);
-//                                        Bitmap scaled = Utility.getResizedBitmap(cropped_face, 112, 112);
-//
-//                                        if (start) {
-//                                            try {
-//                                                recognizeImage(scaled, username);
-//                                            } catch (JsonProcessingException e) {
-//                                                throw new RuntimeException(e);
-//                                            }
-//                                        }
-//                                    }
-//                                }
-//                            })
-//
-//                            .addOnFailureListener(new OnFailureListener() {
-//                                @Override
-//                                public void onFailure(@NonNull Exception e) {
-//
-//                                }
-//                            })
-//
-//                            .addOnCompleteListener(new OnCompleteListener<List<Face>>() {
-//                                @Override
-//                                public void onComplete(@NonNull Task<List<Face>> task) {
-//                                    imageProxy.close(); // v.important to acquire next frame for analysis
-//                                }
-//                            });
-//                }
-//            });
-//
-//            cameraProvider.bindToLifecycle((LifecycleOwner) this, cameraSelector, imageAnalysis, preview);
-//
-//        } catch (Exception e) {
-//            // Handle exception
-//        }
-//    }
 
 
     @Override
@@ -590,6 +501,10 @@ public class MainActivity extends AppCompatActivity {
 
             Log.d("UserImg", new Gson().toJson(Utility.currentLoginUser));
             if (msg.contains("Birthday")) {
+                final MediaPlayer hbd;
+                hbd = MediaPlayer.create(this, R.raw.happybirthday);
+                hbd.start();
+
                 happyBirthdayAnim.setVisibility(View.VISIBLE);
                 anniversaryImg.setVisibility(View.GONE);
             } else if (msg.contains("Anniversary")) {
@@ -785,8 +700,9 @@ public class MainActivity extends AppCompatActivity {
             username = editText.getText().toString().trim();
             start = true;
             previewView.setVisibility(View.VISIBLE);
+            frameLayout.setVisibility(View.VISIBLE);
             findViewById(R.id.relativeLayout).setVisibility(View.GONE);
-            faceOverlay.setVisibility(View.VISIBLE);
+           
             face_preview.setVisibility(View.VISIBLE);
             cameraProvider.unbindAll();
             cameraBind();
@@ -840,7 +756,14 @@ public class MainActivity extends AppCompatActivity {
 
             final PopupWindow popupWindow = new PopupWindow(popupView, width, height, true);
 
+            final MediaPlayer welcome_media;
+            welcome_media = MediaPlayer.create(this, R.raw.welcome);
+
             popupWindow.showAtLocation(view, Gravity.CENTER, 0, 0);
+
+            if (!jsonObject.getString("Active").equalsIgnoreCase("No") || !jsonObject.getString("Membershipstatus").equalsIgnoreCase("Expired")) {
+                welcome_media.start();
+            }
 
             Button cancel = popupView.findViewById(R.id.cancel);
             TextView userName = popupView.findViewById(R.id.userName);
@@ -990,12 +913,14 @@ public class MainActivity extends AppCompatActivity {
 
     public void showErrorWindow(View view, JSONObject jsonObject) throws InterruptedException {
 
-        final MediaPlayer mp, mp2;
-        mp = MediaPlayer.create(this, R.raw.error);
-        mp2 = MediaPlayer.create(this, R.raw.membershipexpiredfvoice); //error msg
-        mp.start();
+        final MediaPlayer error_audio, membership_expired_voice;
+        error_audio = MediaPlayer.create(this, R.raw.error2);
+        membership_expired_voice = MediaPlayer.create(this, R.raw.membershipexpiredfvoice); //error msg
+        error_audio.start();
         Thread.sleep(1000);
-        mp2.start();
+        membership_expired_voice.start();
+
+        int dialogTime = SharedPreference.getDialogTimer(getApplicationContext());
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
@@ -1007,7 +932,14 @@ public class MainActivity extends AppCompatActivity {
 
         AlertDialog dialog = builder.create();
         dialog.show();
+        dialog.getWindow().getDecorView().setBackgroundResource(android.R.color.transparent);
 
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                dialog.dismiss();
+            }
+        }, dialogTime);
 
         okButton.setOnClickListener(new View.OnClickListener() {
             @Override
